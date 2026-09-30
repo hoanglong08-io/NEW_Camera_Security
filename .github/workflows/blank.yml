@@ -1,0 +1,43 @@
+name: Build iOS IPA (.NET MAUI)
+
+on:
+  workflow_dispatch: # Nút này cho phép bạn tự bấm chạy bất cứ lúc nào
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: macos-13 # Bắt buộc dùng máy ảo Mac của GitHub
+
+    steps:
+    - name: Tải mã nguồn về máy ảo
+      uses: actions/checkout@v4
+
+    - name: Cài đặt môi trường .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+      env:
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1 
+
+    - name: Cài đặt Workload cho iOS MAUI
+      run: dotnet workload restore Camera_Client/Camera_Client.csproj
+
+    - name: Build ứng dụng (Tắt Code Signing để chống treo máy)
+      run: |
+        dotnet publish Camera_Client/Camera_Client.csproj -f net8.0-ios -c Release -p:EnableCodeSigning=false -p:RuntimeIdentifier=ios-arm64 -p:TargetPlatformVersion=17.2 -p:SupportedOSPlatformVersion=12.5
+
+    - name: Đóng gói thủ công thành file .ipa (Lách luật Apple)
+      run: |
+        APP_FOLDER=$(find . -name "*.app" -type d | head -n 1)
+        echo "Đã tìm thấy ứng dụng tại: $APP_FOLDER"
+        
+        mkdir -p Payload
+        cp -R "$APP_FOLDER" Payload/
+        zip -qr UngDung-iOS.ipa Payload
+
+    - name: Xuất file .ipa ra để tải về
+      uses: actions/upload-artifact@v4
+      with:
+        name: UngDung-iOS
+        path: UngDung-iOS.ipa
