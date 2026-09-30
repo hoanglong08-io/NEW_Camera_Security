@@ -1,0 +1,47 @@
+name: Build iOS IPA (.NET MAUI)
+
+on:
+  workflow_dispatch: # Cho phép bạn tự bấm nút chạy workflow thủ công
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: macos-13 # Dùng máy ảo Mac của GitHub để mượn Xcode
+
+    steps:
+    - name: 1. Tải mã nguồn về máy ảo
+      uses: actions/checkout@v4
+
+    - name: 2. Cài đặt môi trường .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+      env:
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1 
+
+    - name: 3. Cài đặt Workload cho iOS MAUI
+      # Lưu ý: Thay "Camera_Client/Camera_Client.csproj" bằng đường dẫn đúng tới file .csproj của bạn nếu cần
+      run: dotnet workload restore Camera_Client/Camera_Client.csproj
+
+    - name: 4. Build ứng dụng (Tắt Code Signing để không bị treo máy)
+      # Ép hạ phiên bản hỗ trợ xuống 12.5 cho iPhone 6
+      run: |
+        dotnet publish Camera_Client/Camera_Client.csproj -f net8.0-ios -c Release -p:EnableCodeSigning=false -p:RuntimeIdentifier=ios-arm64 -p:TargetPlatformVersion=17.2 -p:SupportedOSPlatformVersion=12.5
+
+    - name: 5. Đóng gói thủ công thành file .ipa (Lách luật Apple)
+      run: |
+        # Tìm thư mục .app vừa được sinh ra
+        APP_FOLDER=$(find . -name "*.app" -type d | head -n 1)
+        echo "Đã tìm thấy ứng dụng tại: $APP_FOLDER"
+        
+        # Gom vào thư mục Payload và nén thành chuẩn .ipa
+        mkdir -p Payload
+        cp -R "$APP_FOLDER" Payload/
+        zip -qr UngDung-iOS.ipa Payload
+
+    - name: 6. Xuất file .ipa ra để tải về
+      uses: actions/upload-artifact@v4
+      with:
+        name: UngDung-iOS
+        path: UngDung-iOS.ipa
