@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="Camera_Client.MainPage">
+    <Grid RowDefinitions="Auto, *, Auto, Auto" Padding="15" RowSpacing="15">
+        <Entry x:Name="ServerIpEntry" Grid.Row="0" Placeholder="Nhập IP server" />
+
+        
+        <Label x:Name="StatusLabel" Grid.Row="2" Text="Trạng thái: Sẵn sàng" HorizontalOptions="Center" />
+
+        <Grid Grid.Row="3" ColumnDefinitions="*, *, *" ColumnSpacing="10">
+            <Button Text="Quay" BackgroundColor="Red" Clicked="OnRecordClicked" Grid.Column="0"/>
+            <Button Text="Xem Lại" BackgroundColor="Gray" Clicked="OnPlayClicked" Grid.Column="1"/>
+            <Button Text="Lưu Server" BackgroundColor="Green" Clicked="OnSyncClicked" Grid.Column="2"/>
+        </Grid>
+    </Grid>
+</ContentPage>
